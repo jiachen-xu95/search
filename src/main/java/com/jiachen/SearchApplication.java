@@ -1,11 +1,10 @@
-package com.jiachen.search;
+package com.jiachen;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
-@MapperScan("com.jiachen.datesource")
+@MapperScan("com.jiachen.datesource.dao")
 @SpringBootApplication
 public class SearchApplication {
 
