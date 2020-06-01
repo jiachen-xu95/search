@@ -11,5 +11,6 @@ import java.io.IOException;
  */
 public interface DocumentService {
 
+    @Deprecated
     void addDocument() throws IOException;
 }

@@ -48,7 +48,7 @@ public class Client {
     @RequestMapping("/deleteIndex")
     public Boolean deleteIndex() {
         try {
-            return indexService.deleteIndex( );
+            return indexService.deleteIndex("user");
         } catch (Exception e) {
             log.error("deleteIndex error", e);
         }
