@@ -7,13 +7,22 @@ server:
       timeout: 30m
 
 spring:
+
   application:
     name: search
+
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&useSSL=false
-    username: root
-    password: root
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&useSSL=false
+      username: root
+      password: root
+      initial-size: 1
+      max-active: 30
+      min-idle: 1
+      max-wait: 30000
+
   profiles:
     active: dev
 
