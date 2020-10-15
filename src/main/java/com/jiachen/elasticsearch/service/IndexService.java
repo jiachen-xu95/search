@@ -10,7 +10,7 @@ import java.util.List;
  * @Version 1.0
  * @ClassName IndexService
  * @Author jiachenXu
- * @Date 2020/4/12 22:01
+ * @Date 2020/4/12
  * @Description
  */
 public interface IndexService {
@@ -21,12 +21,12 @@ public interface IndexService {
      * @return
      * @throws IOException
      */
-    @Deprecated
     Boolean createIndex() throws IOException;
 
     /**
      * 创建索引
-     * @param indexName
+     *
+     * @param indexName 索引名称
      * @param settings
      * @param mapping
      * @return
@@ -37,7 +37,7 @@ public interface IndexService {
     /**
      * 删除索引
      *
-     * @param indexName
+     * @param indexName 索引名称
      * @return
      * @throws IOException
      */
@@ -58,18 +58,18 @@ public interface IndexService {
      * @return
      * @throws IOException
      */
-    @Deprecated
     String getIndex(String index) throws IOException;
 
     /**
      * 搜索
+     *
      * @param indexName 索引名称
-     * @param field 索引词
-     * @param key 关键词
-     * @param keys 关键词（可空）
-     * @param page 当前页
-     * @param pageSize 页长度
-     * @param sortOrder  倒序\正序
+     * @param field     索引词
+     * @param key       关键词
+     * @param keys      关键词（可空）
+     * @param page      当前页
+     * @param pageSize  页长度
+     * @param sortOrder 倒序\正序
      * @return List<UserModel>
      * @throws IOException
      */
@@ -77,13 +77,14 @@ public interface IndexService {
 
     /**
      * 精确查询
+     *
      * @param indexName 索引名称
-     * @param field 索引词
-     * @param key 关键词
-     * @param keys 关键词（可空）
-     * @param page 当前页
-     * @param pageSize 页长度
-     * @param sortOrder  倒序\正序
+     * @param field     索引词
+     * @param key       关键词
+     * @param keys      关键词（可空）7
+     * @param page      当前页
+     * @param pageSize  页长度
+     * @param sortOrder 倒序\正序
      * @return List<UserModel>
      * @throws IOException
      */
@@ -91,12 +92,13 @@ public interface IndexService {
 
     /**
      * 匹配查询
+     *
      * @param indexName 索引名称
-     * @param field 索引词
-     * @param key 关键词
-     * @param keys 关键词（可空）
-     * @param page 当前页
-     * @param pageSize 页长度
+     * @param field     索引词
+     * @param key       关键词
+     * @param keys      关键词（可空）
+     * @param page      当前页
+     * @param pageSize  页长度
      * @param sortOrder 倒序\正序
      * @return List<UserModel>
      * @throws IOException
@@ -105,12 +107,13 @@ public interface IndexService {
 
     /**
      * 模糊查询
+     *
      * @param indexName 索引名称
-     * @param field 索引词
-     * @param key 关键词
-     * @param keys 关键词（可空）
-     * @param page 当前页
-     * @param pageSize 页长度
+     * @param field     索引词
+     * @param key       关键词
+     * @param keys      关键词（可空）
+     * @param page      当前页
+     * @param pageSize  页长度
      * @param sortOrder 倒序\正序
      * @return List<UserModel>
      * @throws IOException

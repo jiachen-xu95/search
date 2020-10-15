@@ -15,7 +15,7 @@ import java.util.List;
  * @Version 1.0
  * @ClassName SearchConfig
  * @Author jiachenXu
- * @Date 2020/4/12 19:04
+ * @Date 2020/4/12
  * @Description
  */
 @Configuration

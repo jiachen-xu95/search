@@ -36,7 +36,7 @@ import java.util.Optional;
  * @Version 1.0
  * @ClassName IndexServiceImpl
  * @Author jiachenXu
- * @Date 2020/4/12 21:14
+ * @Date 2020/4/12
  * @Description
  */
 @Slf4j
@@ -135,6 +135,7 @@ public class IndexServiceImpl implements IndexService {
             builderMatchQuery(searchSourceBuilder, indexName, field, key, result);
         } else {
             // Todo 关键词在多个索引词进行匹配待完善
+            // builderMultiMatchQuery
         }
 
         return result;
@@ -147,7 +148,6 @@ public class IndexServiceImpl implements IndexService {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder( );
         builderQueryConfig(searchSourceBuilder, page, pageSize, sortOrder);
         searchSourceBuilder.query(QueryBuilders.fuzzyQuery(field, key).fuzziness(Fuzziness.AUTO));
-
         SearchRequest searchRequest = builderSearchRequest(searchSourceBuilder, indexName);
         SearchResponse searchResponse = clientSearch(searchRequest, RequestOptions.DEFAULT);
         builderQueryResult(searchResponse, result);

@@ -9,7 +9,7 @@ import java.util.Date;
  * @Version 1.0
  * @ClassName UserModel
  * @Author jiachenXu
- * @Date 2020/4/12 21:50
+ * @Date 2020/4/12
  * @Description
  */
 @Data
