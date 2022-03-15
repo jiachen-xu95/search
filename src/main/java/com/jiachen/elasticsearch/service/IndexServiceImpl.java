@@ -30,7 +30,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @Version 1.0
@@ -47,12 +47,12 @@ public class IndexServiceImpl implements IndexService {
     private RestHighLevelClient restHighLevelClient;
 
     @Override
-    public Boolean createIndex() throws IOException {
+    public Boolean createIndex(String indexName) throws IOException {
         // 设置索引类型（ES 7.0 将不存在索引类型）和 mapping 与 index 配置
-        CreateIndexRequest createIndexRequest = new CreateIndexRequest("user").settings(createSettings( ));
-        createIndexRequest.mapping("doc", createMapping( ));
+        CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName).settings(createSettings());
+        createIndexRequest.mapping("doc", createMapping());
         // RestHighLevelClient 执行创建索引
-        return restHighLevelClient.indices( ).create(createIndexRequest, RequestOptions.DEFAULT).isAcknowledged( );
+        return restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT).isAcknowledged();
     }
 
     @Override
@@ -64,14 +64,14 @@ public class IndexServiceImpl implements IndexService {
         if (null != mapping && !"".equals(mapping)) {
             request.mapping(mapping, XContentType.JSON);
         }
-        return restHighLevelClient.indices( ).create(request, RequestOptions.DEFAULT).isAcknowledged( );
+        return restHighLevelClient.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
     }
 
 
     @Override
     public Boolean deleteIndex(String indexName) throws IOException {
         DeleteIndexRequest indexRequest = new DeleteIndexRequest(indexName);
-        return restHighLevelClient.indices( ).delete(indexRequest, RequestOptions.DEFAULT).isAcknowledged( );
+        return restHighLevelClient.indices().delete(indexRequest, RequestOptions.DEFAULT).isAcknowledged();
     }
 
     @Override
@@ -82,27 +82,26 @@ public class IndexServiceImpl implements IndexService {
     @Override
     public String getIndex(String index) throws IOException {
         GetIndexRequest getRequest = new GetIndexRequest(index);
-        GetIndexResponse getIndexResponse = restHighLevelClient.indices( ).get(getRequest, RequestOptions.DEFAULT);
-        return JSON.toJSONString(getIndexResponse.getMappings( ));
+        GetIndexResponse getIndexResponse = restHighLevelClient.indices().get(getRequest, RequestOptions.DEFAULT);
+        return JSON.toJSONString(getIndexResponse.getMappings());
     }
 
     @Override
     public List<UserModel> search(String indexName, String field, String key, String[] keys,
                                   int page, int pageSize, SortOrder sortOrder) throws IOException {
-        List<UserModel> result = new ArrayList<>( );
+        List<UserModel> result = new ArrayList<>();
         result.addAll(termQuery(indexName, field, key, keys, page, pageSize, sortOrder));
         result.addAll(matchQuery(indexName, field, key, keys, page, pageSize, sortOrder));
         result.addAll(fuzziness(indexName, field, key, keys, page, pageSize, sortOrder));
-        result.stream().distinct();
-        return result;
+        return result.stream().distinct().collect(Collectors.toList());
     }
 
     @Override
     public List<UserModel> termQuery(String indexName, String field, String key, String[] keys,
                                      int page, int pageSize, SortOrder sortOrder) throws IOException {
-        List<UserModel> result = new ArrayList<>( );
+        List<UserModel> result = new ArrayList<>();
 
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder( );
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         builderQueryConfig(searchSourceBuilder, page, pageSize, sortOrder);
 
         if (key != null) {
@@ -122,9 +121,9 @@ public class IndexServiceImpl implements IndexService {
     @Override
     public List<UserModel> matchQuery(String indexName, String field, String key, String[] keys,
                                       int page, int pageSize, SortOrder sortOrder) throws IOException {
-        List<UserModel> result = new ArrayList<>( );
+        List<UserModel> result = new ArrayList<>();
 
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder( );
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         builderQueryConfig(searchSourceBuilder, page, pageSize, sortOrder);
         searchSourceBuilder.query(QueryBuilders.matchPhraseQuery(field, key));
 
@@ -144,8 +143,8 @@ public class IndexServiceImpl implements IndexService {
     @Override
     public List<UserModel> fuzziness(String indexName, String field, String key, String[] keys,
                                      int page, int pageSize, SortOrder sortOrder) throws IOException {
-        List<UserModel> result = new ArrayList<>( );
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder( );
+        List<UserModel> result = new ArrayList<>();
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         builderQueryConfig(searchSourceBuilder, page, pageSize, sortOrder);
         searchSourceBuilder.query(QueryBuilders.fuzzyQuery(field, key).fuzziness(Fuzziness.AUTO));
         SearchRequest searchRequest = builderSearchRequest(searchSourceBuilder, indexName);
@@ -231,10 +230,10 @@ public class IndexServiceImpl implements IndexService {
      * @param result         查询结果
      */
     private void builderQueryResult(SearchResponse searchResponse, List<UserModel> result) {
-        if (RestStatus.OK.equals(searchResponse.status( )) && searchResponse.getTotalShards( ) > 0) {
-            SearchHits hits = searchResponse.getHits( );
+        if (RestStatus.OK.equals(searchResponse.status()) && searchResponse.getTotalShards() > 0) {
+            SearchHits hits = searchResponse.getHits();
             for (SearchHit hits1 : hits) {
-                result.add(JSON.parseObject(hits1.getSourceAsString( ), UserModel.class));
+                result.add(JSON.parseObject(hits1.getSourceAsString(), UserModel.class));
             }
         }
     }
@@ -246,8 +245,8 @@ public class IndexServiceImpl implements IndexService {
      * @throws IOException
      */
     private XContentBuilder createMapping() throws IOException {
-        return XContentFactory.jsonBuilder( )
-                .startObject( )
+        return XContentFactory.jsonBuilder()
+                .startObject()
                 .field("dynamic", true)
                 .startObject("properties")
 
@@ -256,47 +255,47 @@ public class IndexServiceImpl implements IndexService {
                 .startObject("fields")
                 .startObject("keyword")
                 .field("type", "keyword")
-                .endObject( )
-                .endObject( )
-                .endObject( )
+                .endObject()
+                .endObject()
+                .endObject()
 
                 .startObject("address")
                 .field("type", "text")
                 .startObject("fields")
                 .startObject("keyword")
                 .field("type", "keyword")
-                .endObject( )
-                .endObject( )
-                .endObject( )
+                .endObject()
+                .endObject()
+                .endObject()
 
                 .startObject("remark")
                 .field("type", "text")
                 .startObject("fields")
                 .startObject("keyword")
                 .field("type", "keyword")
-                .endObject( )
-                .endObject( )
-                .endObject( )
+                .endObject()
+                .endObject()
+                .endObject()
 
                 .startObject("age")
                 .field("type", "integer")
-                .endObject( )
+                .endObject()
 
                 .startObject("salary")
                 .field("type", "float")
-                .endObject( )
+                .endObject()
 
                 .startObject("birthDate")
                 .field("type", "date")
                 .field("format", "yyyy-MM-dd")
-                .endObject( )
+                .endObject()
 
                 .startObject("createTime")
                 .field("type", "date")
-                .endObject( )
+                .endObject()
 
-                .endObject( )
-                .endObject( );
+                .endObject()
+                .endObject();
     }
 
     /**
@@ -305,10 +304,10 @@ public class IndexServiceImpl implements IndexService {
      * @return
      */
     private Settings createSettings() {
-        return Settings.builder( )
+        return Settings.builder()
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replicas", 0)
-                .build( );
+                .build();
     }
 
 }

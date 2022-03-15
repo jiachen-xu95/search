@@ -28,7 +28,7 @@ public class Client {
     @RequestMapping("/createIndex")
     public Boolean createIndex() {
         try {
-            return indexService.createIndex( );
+            return indexService.createIndex();
         } catch (Exception e) {
             log.error("createIndex error", e);
         }

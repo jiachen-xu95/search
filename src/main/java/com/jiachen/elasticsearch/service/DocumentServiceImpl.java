@@ -31,13 +31,13 @@ public class DocumentServiceImpl implements DocumentService {
     public void addDocument() throws IOException {
         // id 1
         IndexRequest indexRequest = new IndexRequest("user", "doc", "1");
-        UserModel userInfo = new UserModel( );
+        UserModel userInfo = new UserModel();
         userInfo.setName("张三");
         userInfo.setAge(29);
         userInfo.setSalary(100.00f);
         userInfo.setAddress("北京市");
         userInfo.setRemark("来自北京市的张先生");
-        userInfo.setCreateDate(new Date( ));
+        userInfo.setCreateDate(new Date());
         userInfo.setBirthDate("1990-01-10");
         byte[] json = JSON.toJSONBytes(userInfo);
         // 设置文档内容

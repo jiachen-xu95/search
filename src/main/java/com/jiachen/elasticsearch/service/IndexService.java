@@ -21,7 +21,7 @@ public interface IndexService {
      * @return
      * @throws IOException
      */
-    Boolean createIndex() throws IOException;
+    Boolean createIndex(String indexName) throws IOException;
 
     /**
      * 创建索引

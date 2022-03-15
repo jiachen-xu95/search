@@ -65,7 +65,7 @@ public class SearchConfig {
 
     @Bean
     public RestHighLevelClient restHighLevelClient() {
-        List<HttpHost> httpHosts = new ArrayList<>( );
+        List<HttpHost> httpHosts = new ArrayList<>();
         String[] hostList = address.split(",");
         for (String addr : hostList) {
             String host = addr.split(":")[0];
