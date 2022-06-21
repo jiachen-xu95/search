@@ -3,13 +3,13 @@ package com.jiachen.elasticsearch.service;
 import com.alibaba.fastjson.JSON;
 import com.jiachen.elasticsearch.model.UserModel;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.common.settings.Settings;
@@ -25,11 +25,12 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,31 +43,43 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class IndexServiceImpl implements IndexService {
-
     @Autowired
     private RestHighLevelClient restHighLevelClient;
-
     @Override
-    public Boolean createIndex(String indexName) throws IOException {
-        // 设置索引类型（ES 7.0 将不存在索引类型）和 mapping 与 index 配置
-        CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName).settings(createSettings());
-        createIndexRequest.mapping("doc", createMapping());
-        // RestHighLevelClient 执行创建索引
-        return restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT).isAcknowledged();
+    public Boolean createIndex(String indexName) {
+        try {
+            Settings settings = Settings.builder()
+                    .put("index.number_of_shards", 1)
+                    .put("index.number_of_replicas", 1)
+                    .build();
+            String mapping = "{\"properties\":{\"author\":{\"type\":\"text\"},\n" +
+                    "\"content\":{\"type\":\"text\",\"analyzer\":\"ik_max_word\",\"search_analyzer\":\"ik_smart\"}\n" +
+                    ",\"title\":{\"type\":\"text\",\"analyzer\":\"ik_max_word\",\"search_analyzer\":\"ik_smart\"}\n" +
+                    ",\"createDate\":{\"type\":\"date\",\"format\":\"yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\"}\n" +
+                    "},\"url\":{\"type\":\"text\"}\n" +
+                    "}";
+            return createIndex(indexName, settings, mapping);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
-
     @Override
-    public Boolean createIndex(String indexName, String settings, String mapping) throws IOException {
-        CreateIndexRequest request = new CreateIndexRequest(indexName);
-        if (null != settings && !"".equals(settings)) {
-            request.settings(settings, XContentType.JSON);
+    public Boolean createIndex(String indexName, Settings settings, String mapping) {
+        try {
+            CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+            if (null != settings) {
+                createIndexRequest.settings(settings);
+            }
+            if (null != mapping && !"".equals(mapping)) {
+                createIndexRequest.mapping(mapping, XContentType.JSON);
+            }
+            return restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT).isAcknowledged();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        if (null != mapping && !"".equals(mapping)) {
-            request.mapping(mapping, XContentType.JSON);
-        }
-        return restHighLevelClient.indices().create(request, RequestOptions.DEFAULT).isAcknowledged();
+        return false;
     }
-
 
     @Override
     public Boolean deleteIndex(String indexName) throws IOException {
@@ -87,11 +100,25 @@ public class IndexServiceImpl implements IndexService {
     }
 
     @Override
+    public List<UserModel> queryByKey(String keyWord) {
+        List<UserModel> result = new ArrayList<>();
+        try {
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.multiMatchQuery(keyWord, "name", "address", "salary", "age", "remark", "birthDate"));
+            SearchRequest searchRequest = builderSearchRequest(searchSourceBuilder);
+            SearchResponse searchResponse = clientSearch(searchRequest, RequestOptions.DEFAULT);
+            builderQueryResult(searchResponse, result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
     public List<UserModel> search(String indexName, String field, String key, String[] keys,
                                   int page, int pageSize, SortOrder sortOrder) throws IOException {
         List<UserModel> result = new ArrayList<>();
         result.addAll(termQuery(indexName, field, key, keys, page, pageSize, sortOrder));
-        result.addAll(matchQuery(indexName, field, key, keys, page, pageSize, sortOrder));
         result.addAll(fuzziness(indexName, field, key, keys, page, pageSize, sortOrder));
         return result.stream().distinct().collect(Collectors.toList());
     }
@@ -119,28 +146,6 @@ public class IndexServiceImpl implements IndexService {
     }
 
     @Override
-    public List<UserModel> matchQuery(String indexName, String field, String key, String[] keys,
-                                      int page, int pageSize, SortOrder sortOrder) throws IOException {
-        List<UserModel> result = new ArrayList<>();
-
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        builderQueryConfig(searchSourceBuilder, page, pageSize, sortOrder);
-        searchSourceBuilder.query(QueryBuilders.matchPhraseQuery(field, key));
-
-        SearchRequest searchRequest = builderSearchRequest(searchSourceBuilder, indexName);
-        SearchResponse searchResponse = clientSearch(searchRequest, RequestOptions.DEFAULT);
-        builderQueryResult(searchResponse, result);
-        if (CollectionUtils.isEmpty(result)) {
-            builderMatchQuery(searchSourceBuilder, indexName, field, key, result);
-        } else {
-            // Todo 关键词在多个索引词进行匹配待完善
-            // builderMultiMatchQuery
-        }
-
-        return result;
-    }
-
-    @Override
     public List<UserModel> fuzziness(String indexName, String field, String key, String[] keys,
                                      int page, int pageSize, SortOrder sortOrder) throws IOException {
         List<UserModel> result = new ArrayList<>();
@@ -154,35 +159,15 @@ public class IndexServiceImpl implements IndexService {
     }
 
     /**
-     * 关键词在多个索引词进行匹配
+     * 查询请求
      *
      * @param searchSourceBuilder 构建器
-     * @param indexName           索引名称
-     * @param field               索引词
-     * @param key                 关键词
-     * @return List<UserModel>
+     * @return SearchRequest
      */
-//    private List<UserModel> builderMultiMatchQuery(SearchSourceBuilder searchSourceBuilder, String indexName, String field, String key) throws IOException {
-//        String mappings = getIndex(indexName);
-//        searchSourceBuilder.query(QueryBuilders.multiMatchQuery(key, , field));
-//        return null;
-//    }
-
-    /**
-     * 匹配查询数据
-     *
-     * @param searchSourceBuilder 构建器
-     * @param indexName           索引名称
-     * @param field               索引词
-     * @param key                 关键词
-     * @param result              查询结果
-     */
-    private void builderMatchQuery(SearchSourceBuilder searchSourceBuilder, String indexName,
-                                   String field, String key, List<UserModel> result) throws IOException {
-        searchSourceBuilder.query(QueryBuilders.matchQuery(field, "*" + key));
-        SearchRequest searchRequest = builderSearchRequest(searchSourceBuilder, indexName);
-        SearchResponse searchResponse = clientSearch(searchRequest, RequestOptions.DEFAULT);
-        builderQueryResult(searchResponse, result);
+    private SearchRequest builderSearchRequest(SearchSourceBuilder searchSourceBuilder) {
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.source(searchSourceBuilder);
+        return searchRequest;
     }
 
     /**
@@ -232,8 +217,16 @@ public class IndexServiceImpl implements IndexService {
     private void builderQueryResult(SearchResponse searchResponse, List<UserModel> result) {
         if (RestStatus.OK.equals(searchResponse.status()) && searchResponse.getTotalShards() > 0) {
             SearchHits hits = searchResponse.getHits();
-            for (SearchHit hits1 : hits) {
-                result.add(JSON.parseObject(hits1.getSourceAsString(), UserModel.class));
+            for (SearchHit searchHit : hits) {
+                Map<String, Object> sourceAsMap = searchHit.getSourceAsMap();
+                UserModel userModel = new UserModel();
+                userModel.setName(sourceAsMap.get("name").toString());
+                userModel.setAge(sourceAsMap.get("age").toString());
+                userModel.setSalary(sourceAsMap.get("salary").toString());
+                userModel.setAddress(sourceAsMap.get("address").toString());
+                userModel.setRemark(sourceAsMap.get("remark").toString());
+                userModel.setBirthDate(DateFormat.getInstance().format(sourceAsMap.get("birthDate")));
+                result.add(userModel);
             }
         }
     }

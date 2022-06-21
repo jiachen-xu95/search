@@ -5,6 +5,7 @@ import com.jiachen.elasticsearch.service.IndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -26,9 +27,9 @@ public class Client {
     private DocumentService documentService;
 
     @RequestMapping("/createIndex")
-    public Boolean createIndex() {
+    public Boolean createIndex(@RequestParam(value = "indexName", required = false) String indexName) {
         try {
-            return indexService.createIndex();
+            return indexService.createIndex(indexName);
         } catch (Exception e) {
             log.error("createIndex error", e);
         }

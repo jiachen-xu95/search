@@ -1,6 +1,7 @@
 package com.jiachen.elasticsearch.service;
 
 import com.jiachen.elasticsearch.model.UserModel;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ public interface IndexService {
      * @return
      * @throws IOException
      */
-    Boolean createIndex(String indexName, String settings, String mapping) throws IOException;
+    Boolean createIndex(String indexName, Settings settings, String mapping) throws IOException;
 
     /**
      * 删除索引
@@ -59,6 +60,13 @@ public interface IndexService {
      * @throws IOException
      */
     String getIndex(String index) throws IOException;
+
+    /**
+     * 搜索
+     * @param keyWord
+     * @return
+     */
+    List<UserModel> queryByKey(String keyWord);
 
     /**
      * 搜索
@@ -89,21 +97,6 @@ public interface IndexService {
      * @throws IOException
      */
     List<UserModel> termQuery(String indexName, String field, String key, String[] keys, int page, int pageSize, SortOrder sortOrder) throws IOException;
-
-    /**
-     * 匹配查询
-     *
-     * @param indexName 索引名称
-     * @param field     索引词
-     * @param key       关键词
-     * @param keys      关键词（可空）
-     * @param page      当前页
-     * @param pageSize  页长度
-     * @param sortOrder 倒序\正序
-     * @return List<UserModel>
-     * @throws IOException
-     */
-    List<UserModel> matchQuery(String indexName, String field, String key, String[] keys, int page, int pageSize, SortOrder sortOrder) throws IOException;
 
     /**
      * 模糊查询

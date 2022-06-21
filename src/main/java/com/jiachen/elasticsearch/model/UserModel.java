@@ -19,9 +19,9 @@ public class UserModel implements Serializable {
 
     private String name;
 
-    private Integer age;
+    private String age;
 
-    private float salary;
+    private String salary;
 
     private String address;
 
