@@ -1,6 +1,10 @@
 package com.jiachen.elasticsearch.config;
 
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -31,7 +35,7 @@ public class SearchConfig {
      * 集群地址，如果有多个用“,”隔开
      */
     @Value("${elasticsearch.address}")
-    private String address;
+    private List<String> address;
 
     /**
      * 连接超时时间
@@ -63,16 +67,19 @@ public class SearchConfig {
     @Value("${elasticsearch.maxConnectPerRoute}")
     private int maxConnectPerRoute;
 
-    @Bean
+    @Value("${elasticsearch.userName}")
+    private String userName;
+
+    @Value("${elasticsearch.password}")
+    private String password;
+
+    @Bean("restHighLevelClient")
     public RestHighLevelClient restHighLevelClient() {
         List<HttpHost> httpHosts = new ArrayList<>();
-        String[] hostList = address.split(",");
-        for (String addr : hostList) {
-            String host = addr.split(":")[0];
-            String post = addr.split(":")[1];
-            httpHosts.add(new HttpHost(host, Integer.parseInt(post), schema));
+        for (String addr : address) {
+            String[] parts = addr.split(":");
+            httpHosts.add(new HttpHost(parts[0], Integer.parseInt(parts[1]), schema));
         }
-
         HttpHost[] httpHost = httpHosts.toArray(new HttpHost[]{});
         // 构建连接对象
         RestClientBuilder builder = RestClient.builder(httpHost);
@@ -83,14 +90,16 @@ public class SearchConfig {
             requestConfigBuilder.setConnectionRequestTimeout(connectionRequestTimeout);
             return requestConfigBuilder;
         });
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
         // 异步连接数配置
         builder.setHttpClientConfigCallback(httpClientBuilder -> {
             httpClientBuilder.setMaxConnTotal(maxConnectNum);
             httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute);
+            httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
             return httpClientBuilder;
         });
         return new RestHighLevelClient(builder);
-
     }
 
 }

@@ -17,11 +17,15 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.metrics.cardinality.ParsedCardinality;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +49,30 @@ import java.util.stream.Collectors;
 public class IndexServiceImpl implements IndexService {
     @Autowired
     private RestHighLevelClient restHighLevelClient;
+
+    private SearchResponse getSearchResponse(BoolQueryBuilder boolQueryBuilder, Integer pageNo, Integer pageSize, String sortField, String indexName, Boolean distinct) throws IOException {
+        SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
+        searchSourceBuilder.query(boolQueryBuilder).sort(sortField, SortOrder.DESC).from(pageNo).size(pageSize);
+        if (distinct) {
+            searchSourceBuilder.collapse(new CollapseBuilder(sortField));
+        }
+        SearchRequest searchRequest = new SearchRequest(indexName).source(searchSourceBuilder);
+        return restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+    }
+
+    private long distinctCount(BoolQueryBuilder boolQueryBuilder, String indexName, String field) throws IOException {
+        SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
+        searchSourceBuilder.query(boolQueryBuilder).aggregation(AggregationBuilders.cardinality(field).field(field));
+        SearchRequest searchRequest = new SearchRequest(indexName).source(searchSourceBuilder);
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        ParsedCardinality aggregation = searchResponse.getAggregations().get(field);
+        return aggregation.getValue();
+    }
+
+    private void queryRangeTime(String startTime, String endTime, BoolQueryBuilder boolQueryBuilder, String timeField) {
+        boolQueryBuilder.must(QueryBuilders.rangeQuery(timeField).format(startTime).to(endTime));
+    }
+
     @Override
     public Boolean createIndex(String indexName) {
         try {
@@ -64,6 +92,7 @@ public class IndexServiceImpl implements IndexService {
         }
         return false;
     }
+
     @Override
     public Boolean createIndex(String indexName, Settings settings, String mapping) {
         try {

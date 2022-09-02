@@ -33,8 +33,8 @@ public class DocumentServiceImpl implements DocumentService {
         IndexRequest indexRequest = new IndexRequest("user", "doc", "1");
         UserModel userInfo = new UserModel();
         userInfo.setName("张三");
-        userInfo.setAge(29);
-        userInfo.setSalary(100.00f);
+        userInfo.setAge("29");
+        userInfo.setSalary("100.00");
         userInfo.setAddress("北京市");
         userInfo.setRemark("来自北京市的张先生");
         userInfo.setCreateDate(new Date());
