@@ -24,7 +24,7 @@
         <fastjson.version>1.2.62</fastjson.version>
         <mysql.version>8.0.16</mysql.version>
         <mybatis.version>2.1.1</mybatis.version>
-        <elasticsearch.version>6.8.23</elasticsearch.version>
+        <elasticsearch.version>6.5.4</elasticsearch.version>
         <mybatis-generator.version>1.3.5</mybatis-generator.version>
     </properties>
 
@@ -108,7 +108,6 @@
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
-        <!--mybatis-->
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -136,8 +135,10 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>1.18.24</version>
+            <scope>provided</scope>
         </dependency>
+
 
         <!--自动生成mybatis插件 -->
         <dependency>
@@ -151,25 +152,32 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.3.7.RELEASE</version>
                 <configuration>
-                    <skip>true</skip>
+                    <mainClass>com.jiachen.SearchApplication</mainClass>
                 </configuration>
-            </plugin>
-            <!--逆向工程-->
-            <plugin>
-                <groupId>org.mybatis.generator</groupId>
-                <artifactId>mybatis-generator-maven-plugin</artifactId>
-                <version>1.3.5</version>
-                <configuration>
-                    <verbose>true</verbose>
-                    <overwrite>true</overwrite>
-                    <configurationFile>src/main/resources/generator/generatorConfig.xml</configurationFile>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
-
     </build>
 
 </project>

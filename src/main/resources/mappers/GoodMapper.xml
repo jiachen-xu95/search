@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiachen.elasticsearch.dao.GoodDAO">
+    <select id="query" parameterType="com.jiachen.elasticsearch.dao.object.GoodDO"
+            resultType="com.jiachen.elasticsearch.dao.object.GoodDO">
+        select * from goods
+        <where>
+            id > #{id}
+        </where>
+        order by id asc limit #{limit}
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        select count(1)
+        from goods
+    </select>
+</mapper>
