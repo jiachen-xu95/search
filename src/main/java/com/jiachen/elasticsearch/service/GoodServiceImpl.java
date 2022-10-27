@@ -15,6 +15,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -78,7 +80,12 @@ public class GoodServiceImpl implements GoodService {
         } catch (Exception e) {
 
         }
+    }
 
-
+    private <T> List<T> convertResult(SearchHit[] searchHits, Class<T> tClass) {
+        return Arrays.stream(searchHits)
+                .filter(Objects::nonNull)
+                .map(hit -> JSONObject.parseObject(hit.getSourceAsString(), tClass))
+                .collect(Collectors.toList());
     }
 }

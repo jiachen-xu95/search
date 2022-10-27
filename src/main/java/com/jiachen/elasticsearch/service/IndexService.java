@@ -1,11 +1,11 @@
 package com.jiachen.elasticsearch.service;
 
 import com.jiachen.elasticsearch.model.UserModel;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Version 1.0
@@ -22,7 +22,7 @@ public interface IndexService {
      * @return
      * @throws IOException
      */
-    Boolean createIndex(String indexName) throws IOException;
+    Boolean createAccountIndex() throws IOException;
 
     /**
      * 创建索引
@@ -33,7 +33,7 @@ public interface IndexService {
      * @return
      * @throws IOException
      */
-    Boolean createIndex(String indexName, Settings settings, String mapping) throws IOException;
+    Boolean createIndex(String indexName, Map<String, Object> settings, Map<String, Object> mapping) throws IOException;
 
     /**
      * 删除索引
@@ -51,22 +51,6 @@ public interface IndexService {
      * @return
      */
     Boolean exists(String indexName) throws IOException;
-
-    /**
-     * 获取索引模型
-     *
-     * @param index
-     * @return
-     * @throws IOException
-     */
-    String getIndex(String index) throws IOException;
-
-    /**
-     * 搜索
-     * @param keyWord
-     * @return
-     */
-    List<UserModel> queryByKey(String keyWord);
 
     /**
      * 搜索
@@ -89,14 +73,13 @@ public interface IndexService {
      * @param indexName 索引名称
      * @param field     索引词
      * @param key       关键词
-     * @param keys      关键词（可空）7
      * @param page      当前页
      * @param pageSize  页长度
      * @param sortOrder 倒序\正序
      * @return List<UserModel>
      * @throws IOException
      */
-    List<UserModel> termQuery(String indexName, String field, String key, String[] keys, int page, int pageSize, SortOrder sortOrder) throws IOException;
+    List<UserModel> termQuery(String indexName, String field, String key, String value, int page, int pageSize, SortOrder sortOrder) throws IOException;
 
     /**
      * 模糊查询
@@ -104,13 +87,13 @@ public interface IndexService {
      * @param indexName 索引名称
      * @param field     索引词
      * @param key       关键词
-     * @param keys      关键词（可空）
+     * @param value     关键词（可空）
      * @param page      当前页
      * @param pageSize  页长度
      * @param sortOrder 倒序\正序
      * @return List<UserModel>
      * @throws IOException
      */
-    List<UserModel> fuzziness(String indexName, String field, String key, String[] keys, int page, int pageSize, SortOrder sortOrder) throws IOException;
+    List<UserModel> fuzziness(String indexName, String field, String key, String value, int page, int pageSize, SortOrder sortOrder) throws IOException;
 
 }
