@@ -3,17 +3,18 @@ package com.jiachen.elasticsearch.service;
 import com.alibaba.fastjson.JSONObject;
 import com.jiachen.elasticsearch.model.UserModel;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -124,22 +125,28 @@ public class IndexServiceImpl implements IndexService {
     public Boolean createIndex(String indexName, Map<String, Object> settings, Map<String, Object> mapping) throws IOException {
         CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
         createIndexRequest.settings(settings);
-        createIndexRequest.mapping("doc", mapping);
+        createIndexRequest.mapping(mapping);
         CreateIndexResponse createIndexResponse = restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
         return createIndexResponse.isAcknowledged();
     }
 
     @Override
     public Boolean deleteIndex(String indexName) throws IOException {
-        DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indexName);
-        AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+        AcknowledgedResponse acknowledgedResponse = restHighLevelClient.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
         return acknowledgedResponse.isAcknowledged();
     }
 
     @Override
+    public Boolean clearIndex(String indexName) throws IOException {
+        DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(indexName);
+        deleteByQueryRequest.setQuery(QueryBuilders.matchAllQuery());
+        restHighLevelClient.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT);
+        return Boolean.TRUE;
+    }
+
+    @Override
     public Boolean exists(String indexName) throws IOException {
-        GetIndexRequest getIndexRequest = new GetIndexRequest();
-        return restHighLevelClient.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+        return restHighLevelClient.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
     }
 
     @Override

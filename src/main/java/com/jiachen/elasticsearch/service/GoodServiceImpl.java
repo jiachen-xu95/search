@@ -45,7 +45,6 @@ public class GoodServiceImpl implements GoodService {
         searchSourceBuilder.query(boolQueryBuilder);
         SearchRequest searchRequest = new SearchRequest("good");
         searchRequest.source(searchSourceBuilder);
-        searchRequest.types("doc");
         SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         return Arrays.stream(searchResponse.getHits().getHits())
                 .map(x -> JSON.parseObject(x.getSourceAsString(), GoodDO.class))
@@ -57,8 +56,8 @@ public class GoodServiceImpl implements GoodService {
         int limit = 500;
         long startId = 0L;
         try {
-            Integer count = goodDAO.count();
-            for (int pageNo = 0; pageNo <= (count / limit); pageNo++) {
+            double count = (double) goodDAO.count();
+            for (int pageNo = 0; pageNo <= Math.ceil(count / limit); pageNo++) {
                 GoodDO goodDO = new GoodDO();
                 goodDO.setId(startId);
                 goodDO.setLimit(limit);
@@ -70,11 +69,12 @@ public class GoodServiceImpl implements GoodService {
                 BulkRequest bulkRequest = new BulkRequest();
                 for (GoodDO good : goodDOList) {
                     IndexRequest indexRequest = new IndexRequest("good");
-                    indexRequest.id(good.getId() + "").type("doc").source(JSONObject.toJSONString(good), XContentType.JSON);
+                    indexRequest.id(good.getId().toString()).type("_doc").source(JSONObject.toJSONString(good), XContentType.JSON);
                     bulkRequest.add(indexRequest);
                 }
                 BulkResponse bulk = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
                 log.info(bulk.status().toString());
+                startId = goodDOList.get(goodDOList.size() - 1).getId();
             }
 
         } catch (Exception e) {

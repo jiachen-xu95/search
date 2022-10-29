@@ -19,4 +19,19 @@ public class IndexController {
     public Boolean createAccount() throws IOException {
         return indexService.createAccountIndex();
     }
+
+    @GetMapping("/exists")
+    public Boolean exists(String indexName) throws IOException {
+        return indexService.exists(indexName);
+    }
+
+    @GetMapping("/delete")
+    public Boolean delete(String indexName) throws IOException {
+        return indexService.deleteIndex(indexName);
+    }
+
+    @GetMapping("/clear")
+    public Boolean clear(String indexName) throws IOException {
+        return indexService.clearIndex(indexName);
+    }
 }

@@ -45,6 +45,14 @@ public interface IndexService {
     Boolean deleteIndex(String indexName) throws IOException;
 
     /**
+     * 清空索引数据
+     *
+     * @param indexName
+     * @return
+     */
+    Boolean clearIndex(String indexName) throws IOException;
+
+    /**
      * 索引是否存在
      *
      * @param indexName
